@@ -9,17 +9,21 @@ function buildIncludePaths(resolvedSources) {
 
 function generateDiagram({ filePath, type, includePaths, outputDir, id }) {
   const outputName = `${id}-${type}`;
-  const dotOutput = path.join(outputDir, outputName);
   const svgPath = path.join(outputDir, `${outputName}.svg`);
 
   try {
-    const protodotArgs = ['-src', filePath, '-inc', includePaths, '-output', dotOutput];
+    const protodotArgs = [
+      '-src', filePath,
+      '-inc', includePaths,
+      '-generated', outputDir,
+      '-output', outputName,
+    ];
     if (type === 'file') {
       protodotArgs.push('-select', '*');
     }
     execFileSync('protodot', protodotArgs, { stdio: 'pipe' });
 
-    const dotFile = `${dotOutput}.dot`;
+    const dotFile = path.join(outputDir, `${outputName}.dot`);
     if (!fs.existsSync(dotFile)) {
       return { success: false, error: 'protodot did not produce a .dot file', svgPath: null };
     }

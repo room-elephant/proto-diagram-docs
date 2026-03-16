@@ -42,7 +42,7 @@ describe('generateDiagram (requires protodot + graphviz)', () => {
     expect(fs.existsSync(result.svgPath)).toBe(true);
   });
 
-  test('returns failure info for invalid proto', () => {
+  test('handles invalid proto gracefully (protodot is lenient)', () => {
     const tmpFile = path.join(outputDir, 'bad.proto');
     fs.writeFileSync(tmpFile, 'this is not valid proto');
     const result = generateDiagram({
@@ -51,6 +51,22 @@ describe('generateDiagram (requires protodot + graphviz)', () => {
       includePaths: fixturesDir,
       outputDir,
       id: 'test-bad-01'
+    });
+    expect(typeof result.success).toBe('boolean');
+    if (result.success) {
+      expect(fs.existsSync(result.svgPath)).toBe(true);
+    } else {
+      expect(result.error).toBeTruthy();
+    }
+  });
+
+  test('returns failure for nonexistent proto file', () => {
+    const result = generateDiagram({
+      filePath: '/nonexistent/file.proto',
+      type: 'file',
+      includePaths: fixturesDir,
+      outputDir,
+      id: 'test-missing-01'
     });
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();

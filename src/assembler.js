@@ -14,7 +14,7 @@ function assembleSite({ outputDir, svgDir, searchIndex, version }) {
   fs.writeFileSync(path.join(outputDir, 'search-index.json'), JSON.stringify(searchIndex, null, 2));
 
   if (fs.existsSync(svgDir)) {
-    const svgFiles = fs.readdirSync(svgDir).filter(f => f.endsWith('.svg'));
+    const svgFiles = fs.readdirSync(svgDir).filter(f => f.endsWith('.svg') && !f.endsWith('.dot.svg'));
     for (const file of svgFiles) {
       fs.copyFileSync(path.join(svgDir, file), path.join(outputDir, 'diagrams', file));
     }
