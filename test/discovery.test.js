@@ -1,7 +1,7 @@
 const { discoverProtos } = require('../src/discovery');
 const path = require('path');
 
-const fixturesDir = path.resolve(__dirname, '../fixtures/protos');
+const fixturesDir = path.resolve(__dirname, 'fixtures/protos');
 
 describe('discoverProtos', () => {
   test('discovers all proto files recursively', () => {

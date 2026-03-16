@@ -4,41 +4,46 @@ Generate static documentation sites with SVG diagrams from Protocol Buffer defin
 
 ## Features
 
-- **Static site** — Single HTML file with inlined CSS/JS, no server required
-- **Multiple diagram types** — File-level, package-level, and dependency-expanded views
-- **Search** — Filter catalog by name, package, messages, services, enums
-- **Pan/zoom viewer** — Mouse drag to pan, scroll or buttons to zoom, FIT and 1:1 modes
-- **GitHub Pages deployment** — Ready-to-use workflow for automated publishing
-- **file:// compatible** — Open `index.html` directly in a browser
+- **Fully self-contained** — single HTML file with inlined search index, SVG diagrams, CSS, and JS
+- **Multiple diagram types** — file-level, dependency-expanded, and package-level views
+- **Searchable catalog** — filter by name, package, messages, services, or enums
+- **Interactive viewer** — pan by drag, scroll to zoom, auto-fit on load, FIT and 1:1 controls
+- **Dark theme** — Kafbat UI-inspired dark interface
+- **Works everywhere** — open `index.html` directly from the filesystem (`file://`), serve from GitHub Pages, or any static host
 
 ## System Dependencies
 
-- **Node.js** >= 18
-- **protodot** — Transforms `.proto` → `.dot` (Graphviz)
-- **Graphviz** — Transforms `.dot` → `.svg`
+| Dependency | Purpose | Install |
+|------------|---------|---------|
+| **Node.js** >= 18 | CLI runtime | [nodejs.org](https://nodejs.org) |
+| **protodot** | `.proto` → `.dot` | See below |
+| **Graphviz** | `.dot` → `.svg` | See below |
 
-### Installing Graphviz
+### Graphviz
 
-**macOS:**
 ```bash
+# macOS
 brew install graphviz
-```
 
-**Linux (Debian/Ubuntu):**
-```bash
+# Debian / Ubuntu
 sudo apt-get update && sudo apt-get install -y graphviz
 ```
 
-### Installing protodot
+### protodot
 
 ```bash
-# Download binary (Linux example)
+# macOS
+curl -L https://protodot.seamia.net/binaries/darwin -o /usr/local/bin/protodot
+chmod +x /usr/local/bin/protodot
+protodot -install
+
+# Linux
 curl -L https://protodot.seamia.net/binaries/linux -o /usr/local/bin/protodot
 chmod +x /usr/local/bin/protodot
 protodot -install
 ```
 
-See [protodot](https://github.com/seamia/protodot) for macOS and other platforms.
+See [protodot](https://github.com/seamia/protodot) for more details.
 
 ## Quick Start
 
@@ -46,49 +51,67 @@ See [protodot](https://github.com/seamia/protodot) for macOS and other platforms
 npm install -g proto-diagram-docs
 ```
 
-Create `proto-diagrams.yaml` in your project:
+Create a `proto-diagrams.yaml` in your project root:
 
 ```yaml
 diagrams:
   file_level: true
   package_level: true
-  dependency_expanded: false
+  dependency_expanded: true
 
 sources:
-  - type: local
-    path: ./protos
+  - type: git
+    repo: https://github.com/open-telemetry/opentelemetry-proto
+    ref: main
     roots:
-      - path: .
-        label: "My Protos"
-        description: "Service definitions"
-    exclude: []
+      - path: opentelemetry/proto/trace/v1
+        label: "Trace"
+      - path: opentelemetry/proto/metrics/v1
+        label: "Metrics"
+    exclude:
+      - "**/test/**"
+
+metadata:
+  show_package: true
+  show_source: true
+  link_to_source: true
 ```
 
 Generate the site:
 
 ```bash
-proto-diagram-docs generate
+proto-diagram-docs generate --config proto-diagrams.yaml
 ```
 
-Output goes to `dist/` by default. Open `dist/index.html` in a browser.
+Output goes to `dist/` by default. Open `dist/index.html` in any browser.
+
+Use `--output` to change the destination:
+
+```bash
+proto-diagram-docs generate --config proto-diagrams.yaml --output ./site
+```
+
+See [`examples/proto-diagrams.yaml`](examples/proto-diagrams.yaml) for a full configuration example using OpenTelemetry protos.
 
 ## Configuration Reference
 
-### diagrams
+### `diagrams`
 
-Enable or disable diagram types. At least one must be `true`.
+Controls which diagram types to generate. At least one must be `true`.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `file_level` | `true` | One diagram per `.proto` file (elements declared in that file only) |
-| `package_level` | `false` | One diagram per proto package (aggregates all files sharing the package) |
-| `dependency_expanded` | `false` | One diagram per file showing full graph including imports |
+| `file_level` | `true` | One diagram per `.proto` file showing only its own types |
+| `package_level` | `false` | One diagram per proto package aggregating all files that share it |
+| `dependency_expanded` | `false` | One diagram per file showing its types plus all imported types |
 
-### sources
+### `sources`
 
 Required. Array of proto sources. Each source must have at least one root.
 
 #### Git source
+
+Clones a repository at build time. For private repos, set the `GITHUB_TOKEN` environment variable.
 
 ```yaml
 - type: git
@@ -99,8 +122,7 @@ Required. Array of proto sources. Each source must have at least one root.
       label: "Group Name"
       description: "Optional description"
   exclude:
-    - "**/*test*"
-    - "**/internal/**"
+    - "**/test/**"
 ```
 
 | Field | Required | Description |
@@ -108,10 +130,12 @@ Required. Array of proto sources. Each source must have at least one root.
 | `type` | yes | `"git"` |
 | `repo` | yes | Git repository URL |
 | `ref` | no | Branch or tag (default: `master`) |
-| `roots` | yes | Array of root configs (see below) |
+| `roots` | yes | Array of root configs |
 | `exclude` | no | Glob patterns to exclude (default: `[]`) |
 
 #### Local source
+
+References proto files on the local filesystem.
 
 ```yaml
 - type: local
@@ -119,7 +143,6 @@ Required. Array of proto sources. Each source must have at least one root.
   roots:
     - path: .
       label: "Internal"
-      description: "Internal service definitions"
   exclude: []
 ```
 
@@ -127,42 +150,45 @@ Required. Array of proto sources. Each source must have at least one root.
 |-------|----------|-------------|
 | `type` | yes | `"local"` |
 | `path` | yes | Path to proto directory (relative to config file) |
-| `roots` | yes | Array of root configs (see below) |
+| `roots` | yes | Array of root configs |
 | `exclude` | no | Glob patterns to exclude (default: `[]`) |
 
 #### Root config
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `path` | yes | Subpath within the source (e.g. `google/cloud/billing` or `.` for root) |
-| `label` | no | Catalog group name (default: directory name) |
-| `description` | no | Optional description for the group |
+| `path` | yes | Subpath within the source (use `.` for root) |
+| `label` | no | Catalog group name (defaults to directory name) |
+| `description` | no | Description for the group |
 
-### metadata
+### `metadata`
 
 Display options for catalog entries.
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `show_package` | `true` | Show proto package below file name |
-| `show_source` | `true` | Show source repo or path on each entry |
-| `link_to_source` | `true` | Add external link to proto file in repo (git sources only) |
+| `show_source` | `true` | Show source name on each entry |
+| `link_to_source` | `true` | Link to proto file in repository (git sources only) |
 
 ## Adding a New Source
 
-1. Add a new entry to `sources` in `proto-diagrams.yaml`.
-2. For **git** sources: set `type: git`, `repo`, optional `ref`, and define `roots` with `path` and optional `label`/`description`.
-3. For **local** sources: set `type: local`, `path` to your proto directory, and define `roots`.
-4. Add `exclude` patterns if needed (e.g. `["**/*test*", "**/internal/**"]`).
+1. Add a new entry to `sources` in your `proto-diagrams.yaml`.
+2. For **git** sources: set `type: git`, `repo`, optional `ref`, and `roots`.
+3. For **local** sources: set `type: local`, `path`, and `roots`.
+4. Add `exclude` patterns to skip test or internal protos.
 5. Run `proto-diagram-docs generate`.
 
-## CI/CD Setup
+## CI/CD with GitHub Actions
 
-1. Copy `.github/workflows/proto-diagrams.yml` into your repository.
-2. Ensure `proto-diagrams.yaml` exists in the repo root (or adjust the workflow `paths` filter).
-3. Add a repo secret `PROTO_REPOS_TOKEN` — a GitHub token with `repo` scope for private repos. The workflow maps it to `GITHUB_TOKEN` for cloning.
-4. Enable GitHub Pages: Settings → Pages → Source: GitHub Actions.
-5. The workflow runs on schedule (daily 6am UTC), manual dispatch, and when `proto-diagrams.yaml` changes on `main`.
+A ready-to-use workflow is provided in `.github/workflows/proto-diagrams.yml`.
+
+1. Copy it into your repository's `.github/workflows/` directory.
+2. Add a `proto-diagrams.yaml` config to the repo root.
+3. For private repos, add a `PROTO_REPOS_TOKEN` secret with `repo` scope.
+4. Enable GitHub Pages: **Settings > Pages > Source: GitHub Actions**.
+
+The workflow runs daily (6 AM UTC), on manual dispatch, and when `proto-diagrams.yaml` changes on `main`.
 
 ## Development
 
@@ -170,14 +196,49 @@ Display options for catalog entries.
 git clone https://github.com/room-elephant/proto-diagram-docs
 cd proto-diagram-docs
 npm install
-npm test
 ```
 
-E2E tests require protodot and Graphviz installed:
+### Running Tests
 
 ```bash
+# Unit tests (fast, no external deps)
+npm test
+
+# Integration tests (requires protodot + Graphviz)
+npm run test:integration
+
+# E2E browser tests (requires protodot + Graphviz + Playwright)
 npx playwright install chromium
 npm run test:e2e
+
+# Everything
+npm run test:all
+```
+
+### Project Structure
+
+```
+bin/                  CLI entry point
+src/
+  cli.js              Command definitions (Commander.js)
+  config.js            YAML config loading and validation
+  deps.js              System dependency checks
+  discovery.js         Recursive .proto file discovery
+  generator.js         protodot + Graphviz diagram generation
+  id.js                Deterministic SHA-256 ID generation
+  metadata.js          Proto file parsing (package, messages, etc.)
+  assembler.js         Static site assembly
+  reporter.js          Build summary formatting
+  search-index.js      Search index builder
+  sources.js           Git clone / local path resolution
+  site/
+    template.html      SPA template (HTML + CSS + JS)
+test/
+  fixtures/protos/     Example proto files for testing
+  e2e/                 Playwright browser tests
+  *.test.js            Jest unit and integration tests
+examples/
+  proto-diagrams.yaml  Full example configuration
 ```
 
 ## License

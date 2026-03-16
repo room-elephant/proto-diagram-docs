@@ -2,28 +2,50 @@
   "name": "proto-diagram-docs",
   "version": "0.1.0",
   "description": "Generate static documentation sites with SVG diagrams from Protocol Buffer definitions",
-  "main": "src/cli.js",
+  "author": "Room Elephant",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/room-elephant/proto-diagram-docs.git"
+  },
+  "homepage": "https://github.com/room-elephant/proto-diagram-docs",
+  "bugs": {
+    "url": "https://github.com/room-elephant/proto-diagram-docs/issues"
+  },
   "bin": {
     "proto-diagram-docs": "bin/proto-diagram-docs.js"
   },
+  "files": [
+    "bin/",
+    "src/"
+  ],
   "scripts": {
-    "test": "jest --testPathIgnorePatterns=e2e",
+    "test": "jest --testPathIgnorePatterns=e2e --testPathIgnorePatterns=integration",
+    "test:integration": "jest test/integration.test.js",
     "test:e2e": "playwright test",
-    "test:all": "jest"
+    "test:all": "npm test && npm run test:integration && npm run test:e2e"
   },
-  "keywords": ["protobuf", "documentation", "graphviz", "diagrams", "protodot"],
-  "license": "MIT",
+  "keywords": [
+    "protobuf",
+    "protocol-buffers",
+    "documentation",
+    "graphviz",
+    "diagrams",
+    "protodot",
+    "static-site",
+    "svg"
+  ],
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "commander": "^12.0.0",
-    "js-yaml": "^4.1.0",
     "glob": "^10.0.0",
+    "js-yaml": "^4.1.0",
     "minimatch": "^9.0.0"
   },
   "devDependencies": {
-    "jest": "^29.0.0",
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.40.0",
+    "jest": "^29.0.0"
   }
 }

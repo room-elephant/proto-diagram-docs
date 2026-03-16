@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const CLI = path.resolve(__dirname, '../../bin/proto-diagram-docs.js');
-const CONFIG = path.resolve(__dirname, '../../proto-diagrams.example.yaml');
+const CONFIG = path.resolve(__dirname, '../test-config.yaml');
 const OUTPUT = path.resolve(__dirname, '../../dist-e2e-test');
 
 test.beforeAll(() => {

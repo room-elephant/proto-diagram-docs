@@ -1,0 +1,16 @@
+# Development & CI
+.github/
+.superpowers/
+docs/
+test/
+test-results/
+examples/
+
+# Build artifacts
+dist/
+templates/
+config.json
+
+# Editor & OS
+.cursor/
+*.tgz

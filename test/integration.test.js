@@ -4,7 +4,7 @@ const path = require('path');
 const os = require('os');
 
 const CLI = path.resolve(__dirname, '../bin/proto-diagram-docs.js');
-const EXAMPLE_CONFIG = path.resolve(__dirname, '../proto-diagrams.example.yaml');
+const EXAMPLE_CONFIG = path.resolve(__dirname, 'test-config.yaml');
 
 describe('End-to-end generation', () => {
   const outputDir = path.join(os.tmpdir(), 'proto-diagram-docs-integration-test');

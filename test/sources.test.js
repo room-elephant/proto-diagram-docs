@@ -6,9 +6,9 @@ const os = require('os');
 describe('resolveLocalSource', () => {
   test('resolves existing local path relative to config dir', () => {
     const configDir = path.resolve(__dirname, '..');
-    const source = { type: 'local', path: './fixtures/protos', roots: [{ path: '.' }] };
+    const source = { type: 'local', path: './test/fixtures/protos', roots: [{ path: '.' }] };
     const result = resolveLocalSource(source, configDir);
-    expect(result.resolvedPath).toBe(path.join(configDir, 'fixtures/protos'));
+    expect(result.resolvedPath).toBe(path.join(configDir, 'test/fixtures/protos'));
     expect(fs.existsSync(result.resolvedPath)).toBe(true);
   });
 

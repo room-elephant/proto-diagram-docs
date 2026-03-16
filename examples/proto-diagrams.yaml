@@ -30,7 +30,7 @@ sources:
       - "**/test/**"
 
   - type: local
-    path: ./fixtures/protos
+    path: ../test/fixtures/protos
     roots:
       - path: billing
         label: "Billing (local)"

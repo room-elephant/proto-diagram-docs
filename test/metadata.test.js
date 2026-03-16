@@ -1,7 +1,7 @@
 const { extractMetadata } = require('../src/metadata');
 const path = require('path');
 
-const fixturesDir = path.resolve(__dirname, '../fixtures/protos');
+const fixturesDir = path.resolve(__dirname, 'fixtures/protos');
 
 describe('extractMetadata', () => {
   test('extracts package declaration', () => {

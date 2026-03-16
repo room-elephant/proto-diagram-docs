@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-const fixturesDir = path.resolve(__dirname, '../fixtures/protos');
+const fixturesDir = path.resolve(__dirname, 'fixtures/protos');
 
 describe('buildIncludePaths', () => {
   test('joins source paths with semicolons', () => {

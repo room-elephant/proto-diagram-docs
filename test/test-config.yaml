@@ -1,0 +1,24 @@
+diagrams:
+  file_level: true
+  package_level: true
+  dependency_expanded: true
+
+sources:
+  - type: local
+    path: ./fixtures/protos
+    roots:
+      - path: billing
+        label: "Billing"
+        description: "Billing and payment services"
+      - path: notifications
+        label: "Notifications"
+        description: "Notification delivery"
+      - path: common
+        label: "Common"
+        description: "Shared types"
+    exclude: []
+
+metadata:
+  show_package: true
+  show_source: true
+  link_to_source: false
