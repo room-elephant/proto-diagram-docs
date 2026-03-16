@@ -31,7 +31,7 @@ proto-diagram-docs generate [--config proto-diagrams.yaml] [--output dist]
 ### Pipeline
 
 1. **Check system dependencies** — verify `protodot` and `dot` are on PATH. Fail immediately with a clear message naming the missing tool and linking to install instructions.
-2. **Load and validate config** — parse YAML, validate against a JSON schema. Fail with specific field-level errors.
+2. **Load and validate config** — parse YAML, validate config structure programmatically. Fail with specific field-level errors.
 3. **Resolve sources** — for git sources, shallow-clone (`--depth 1`) to a temp directory using `GITHUB_TOKEN` env var if set. For local sources, verify paths exist.
 4. **Discover proto files** — recursively find `.proto` files under each source's configured roots, applying exclusion globs.
 5. **Extract metadata** — lightweight regex parse of each `.proto` file to extract `package`, `import` statements, and top-level `message`, `enum`, `service` names.
@@ -138,7 +138,7 @@ import "google/cloud/billing/v1/invoice.proto";
 import "google/cloud/billing/v1/account.proto";
 ```
 
-Imports are ordered alphabetically by file path for determinism. The synthetic file is written to `<tmpdir>/pkg-<package-name>.proto`.
+Imports are ordered alphabetically by file path for determinism. The synthetic file is written to a temp directory (`<tmpdir>/pkg-<package-name>.proto`), created for both git and local sources.
 
 ```bash
 protodot -src <tmpdir>/pkg-google.cloud.billing.v1.proto -inc <include-paths> -output <name>
@@ -166,7 +166,7 @@ dist/
 
 SHA-256 hashes (first 8 hex characters) derived from source identity:
 - File diagrams (git sources): `sha256(repo_url + ":" + root_path + ":" + relative_file_path)[:8]`
-- File diagrams (local sources): `sha256("local:" + absolute_config_relative_path + ":" + root_path + ":" + relative_file_path)[:8]`
+- File diagrams (local sources): `sha256("local:" + source_path_resolved_from_config_dir + ":" + root_path + ":" + relative_file_path)[:8]` (e.g., `./protos` resolved to `/repo/protos`)
 - Package diagrams: `sha256("pkg:" + package_name)[:8]`
 
 Same inputs produce the same IDs across rebuilds. Deep links remain valid unless source identifiers change.
@@ -218,6 +218,8 @@ Given the same config and proto files, output is byte-for-byte identical. No tim
   }
 ]
 ```
+
+The `source` field is derived from the last path segment of the repo URL for git sources (e.g., `googleapis` from `https://github.com/googleapis/googleapis`), or the basename of the source path for local sources.
 
 Searchable fields: name, package, label, message/service/enum names, path.
 
