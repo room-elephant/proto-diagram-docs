@@ -403,7 +403,8 @@ html, body {
 (function () {
   'use strict';
 
-  var searchIndex = [];
+  var searchIndex = /*SEARCH_INDEX_START*/[]/*SEARCH_INDEX_END*/;
+  var svgData = /*SVG_DATA_START*/{}/*SVG_DATA_END*/;
   var currentId = null;
   var currentType = null;
   var scale = 1;
@@ -425,23 +426,9 @@ html, body {
   });
 
   // ── Data loading ───────────────────────────────────────
-  function loadSearchIndex() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'search-index.json', true);
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 0) {
-          try {
-            searchIndex = JSON.parse(xhr.responseText);
-          } catch (e) {
-            searchIndex = [];
-          }
-        }
-        renderCatalog(searchIndex);
-        handleHashChange();
-      }
-    };
-    xhr.send();
+  function init() {
+    renderCatalog(searchIndex);
+    handleHashChange();
   }
 
   // ── Catalog rendering ──────────────────────────────────
@@ -693,7 +680,15 @@ html, body {
     emptyState.style.display = 'none';
     svgContainer.innerHTML = '<div class="loading-state">Loading diagram\u2026</div>';
 
-    var url = 'diagrams/' + id + '-' + type + '.svg';
+    var filename = id + '-' + type + '.svg';
+
+    if (svgData[filename]) {
+      svgContainer.innerHTML = svgData[filename];
+      resetTransform();
+      return;
+    }
+
+    var url = 'diagrams/' + filename;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function () {
@@ -828,7 +823,7 @@ html, body {
   });
 
   // ── Init ───────────────────────────────────────────────
-  loadSearchIndex();
+  init();
 })();
 </script>
 </body>
