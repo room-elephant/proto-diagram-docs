@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package billing.v1;
+
+import "common/money.proto";
+
+message Invoice {
+  string name = 1;
+  string billing_account = 2;
+  Money total_amount = 3;
+  repeated LineItem line_items = 4;
+}
+
+message LineItem {
+  string description = 1;
+  Money amount = 2;
+  int32 quantity = 3;
+}

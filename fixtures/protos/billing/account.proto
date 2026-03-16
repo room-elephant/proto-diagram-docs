@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package billing.v1;
+
+message PaymentMethod {
+  string id = 1;
+  string type = 2;
+  string last_four = 3;
+  bool is_default = 4;
+}
+
+message BillingProfile {
+  string name = 1;
+  string email = 2;
+  repeated PaymentMethod payment_methods = 3;
+}

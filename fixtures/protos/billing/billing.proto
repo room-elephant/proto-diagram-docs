@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package billing.v1;
+
+import "common/money.proto";
+
+enum AccountStatus {
+  ACCOUNT_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  SUSPENDED = 2;
+  CLOSED = 3;
+}
+
+message BillingAccount {
+  string name = 1;
+  string display_name = 2;
+  AccountStatus status = 3;
+}
+
+service BillingService {
+  rpc GetAccount(GetAccountRequest) returns (BillingAccount);
+  rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
+}
+
+message GetAccountRequest {
+  string name = 1;
+}
+
+message ListAccountsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListAccountsResponse {
+  repeated BillingAccount accounts = 1;
+  string next_page_token = 2;
+}
