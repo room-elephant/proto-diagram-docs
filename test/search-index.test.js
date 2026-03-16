@@ -27,7 +27,7 @@ describe('buildSearchIndex', () => {
   });
 
   test('file entries have correct shape', () => {
-    const index = buildSearchIndex(protos, []);
+    const index = buildSearchIndex(protos, [], { link_to_source: true });
     const entry = index[0];
     expect(entry.id).toBe('abc12345');
     expect(entry.type).toBe('file');
@@ -40,6 +40,18 @@ describe('buildSearchIndex', () => {
     expect(entry.enums).toEqual(['AccountStatus']);
     expect(entry.diagramTypes).toEqual(['file', 'deps']);
     expect(entry.path).toBe('billing/billing.proto');
+    expect(entry.sourceUrl).toBe('https://github.com/org/repo/blob/master/billing/billing.proto');
+  });
+
+  test('omits sourceUrl when link_to_source is false', () => {
+    const index = buildSearchIndex(protos, [], { link_to_source: false });
+    expect(index[0].sourceUrl).toBeUndefined();
+  });
+
+  test('omits sourceUrl for local sources', () => {
+    const localProtos = [{ ...protos[0], source: { type: 'local', path: './my-protos' } }];
+    const index = buildSearchIndex(localProtos, [], { link_to_source: true });
+    expect(index[0].sourceUrl).toBeUndefined();
   });
 
   test('derives source name from git repo URL', () => {

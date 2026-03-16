@@ -152,7 +152,7 @@ program
       }
     }
 
-    const searchIndex = buildSearchIndex(allProtos, packageEntries);
+    const searchIndex = buildSearchIndex(allProtos, packageEntries, config.metadata);
 
     assembleSite({
       outputDir: options.output,

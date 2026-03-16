@@ -7,10 +7,19 @@ function deriveSourceName(source) {
   return path.basename(source.path);
 }
 
-function buildSearchIndex(fileProtos, packageEntries) {
+function buildSourceUrl(proto) {
+  if (proto.source.type !== 'git') return undefined;
+  const repo = proto.source.repo.replace(/\.git$/, '');
+  const ref = proto.source.ref || 'master';
+  const filePath = proto.relativePath.replace(/\\/g, '/');
+  return `${repo}/blob/${ref}/${filePath}`;
+}
+
+function buildSearchIndex(fileProtos, packageEntries, metadata) {
+  const linkToSource = metadata && metadata.link_to_source !== false;
   const index = [];
   for (const proto of fileProtos) {
-    index.push({
+    const entry = {
       id: proto.id,
       type: 'file',
       name: proto.fileName,
@@ -22,7 +31,12 @@ function buildSearchIndex(fileProtos, packageEntries) {
       enums: proto.metadata.enums,
       diagramTypes: proto.diagramTypes,
       path: proto.relativePath,
-    });
+    };
+    if (linkToSource) {
+      const url = buildSourceUrl(proto);
+      if (url) entry.sourceUrl = url;
+    }
+    index.push(entry);
   }
   for (const pkg of packageEntries) {
     index.push({
