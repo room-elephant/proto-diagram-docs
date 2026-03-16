@@ -321,6 +321,13 @@ html, body {
   left: 0;
 }
 
+.svg-container svg .node text { fill: #1a1a1a; }
+.svg-container svg .graph > title + a > text { fill: #ABB5BA; }
+.svg-container svg polygon[stroke="black"],
+.svg-container svg polygon[stroke="#000000"] { stroke: #4a5568; }
+.svg-container svg .edge path { stroke: #5B67E3; }
+.svg-container svg .edge polygon { stroke: #5B67E3; fill: #5B67E3; }
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -684,7 +691,7 @@ html, body {
 
     if (svgData[filename]) {
       svgContainer.innerHTML = svgData[filename];
-      resetTransform();
+      fitToView();
       return;
     }
 
@@ -695,8 +702,8 @@ html, body {
       if (xhr.readyState === 4) {
         if (xhr.status === 200 || xhr.status === 0) {
           if (xhr.responseText && xhr.responseText.indexOf('<svg') !== -1) {
-            svgContainer.innerHTML = xhr.responseText;
-            resetTransform();
+                svgContainer.innerHTML = xhr.responseText;
+                fitToView();
           } else {
             showError('Diagram not found');
           }
@@ -724,6 +731,24 @@ html, body {
     scale = 1;
     translateX = 0;
     translateY = 0;
+    applyTransform();
+  }
+
+  function fitToView() {
+    var svg = svgContainer.querySelector('svg');
+    if (!svg) { resetTransform(); return; }
+
+    var vw = viewport.clientWidth;
+    var vh = viewport.clientHeight;
+    var svgW = svg.getBoundingClientRect().width / scale;
+    var svgH = svg.getBoundingClientRect().height / scale;
+
+    if (svgW === 0 || svgH === 0) { resetTransform(); return; }
+
+    var fitScale = Math.min(vw / svgW, vh / svgH) * 0.95;
+    scale = Math.max(0.1, Math.min(10, fitScale));
+    translateX = (vw - svgW * scale) / 2;
+    translateY = (vh - svgH * scale) / 2;
     applyTransform();
   }
 
@@ -797,23 +822,7 @@ html, body {
     applyTransform();
   });
 
-  document.querySelector('.zoom-fit').addEventListener('click', function () {
-    var svg = svgContainer.querySelector('svg');
-    if (!svg) return;
-
-    var vw = viewport.clientWidth;
-    var vh = viewport.clientHeight;
-    var svgW = svg.getBoundingClientRect().width / scale;
-    var svgH = svg.getBoundingClientRect().height / scale;
-
-    if (svgW === 0 || svgH === 0) return;
-
-    var fitScale = Math.min(vw / svgW, vh / svgH) * 0.95;
-    scale = Math.max(0.1, Math.min(10, fitScale));
-    translateX = (vw - svgW * scale) / 2;
-    translateY = (vh - svgH * scale) / 2;
-    applyTransform();
-  });
+  document.querySelector('.zoom-fit').addEventListener('click', fitToView);
 
   document.querySelector('.zoom-reset').addEventListener('click', function () {
     scale = 1;

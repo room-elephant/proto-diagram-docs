@@ -4,21 +4,39 @@ diagrams:
   dependency_expanded: true
 
 sources:
+  - type: git
+    repo: https://github.com/open-telemetry/opentelemetry-proto
+    ref: main
+    roots:
+      - path: opentelemetry/proto/trace/v1
+        label: "Trace"
+        description: "Distributed tracing"
+      - path: opentelemetry/proto/metrics/v1
+        label: "Metrics"
+        description: "Metrics data model"
+      - path: opentelemetry/proto/logs/v1
+        label: "Logs"
+        description: "Log data model"
+      - path: opentelemetry/proto/common/v1
+        label: "Common"
+        description: "Shared types"
+      - path: opentelemetry/proto/resource/v1
+        label: "Resource"
+        description: "Resource information"
+      - path: opentelemetry/proto/collector
+        label: "Collector"
+        description: "OTLP collector services"
+    exclude:
+      - "**/test/**"
+
   - type: local
     path: ./fixtures/protos
     roots:
       - path: billing
-        label: "Billing"
+        label: "Billing (local)"
         description: "Billing and payment services"
-      - path: notifications
-        label: "Notifications"
-        description: "Notification delivery"
-      - path: common
-        label: "Common"
-        description: "Shared types"
-    exclude: []
 
 metadata:
   show_package: true
   show_source: true
-  link_to_source: false
+  link_to_source: true
