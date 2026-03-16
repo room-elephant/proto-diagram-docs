@@ -32,7 +32,7 @@ proto-diagram-docs generate [--config proto-diagrams.yaml] [--output dist]
 
 1. **Check system dependencies** — verify `protodot` and `dot` are on PATH. Fail immediately with a clear message naming the missing tool and linking to install instructions.
 2. **Load and validate config** — parse YAML, validate against a JSON schema. Fail with specific field-level errors.
-3. **Resolve sources** — for git sources, shallow-clone to a temp directory using `GITHUB_TOKEN` env var if set. For local sources, verify paths exist.
+3. **Resolve sources** — for git sources, shallow-clone (`--depth 1`) to a temp directory using `GITHUB_TOKEN` env var if set. For local sources, verify paths exist.
 4. **Discover proto files** — recursively find `.proto` files under each source's configured roots, applying exclusion globs.
 5. **Extract metadata** — lightweight regex parse of each `.proto` file to extract `package`, `import` statements, and top-level `message`, `enum`, `service` names.
 6. **Generate diagrams** — for each proto file, for each enabled diagram type, run protodot then dot. Collect per-file success/failure results.
@@ -88,6 +88,7 @@ metadata:
 - Local paths must exist on disk
 - `GITHUB_TOKEN` env var used for all git sources (single global token)
 - Labels on roots define catalog groups; defaults to directory name if omitted
+- Config validation is implemented programmatically using the rules above (no separate JSON schema file)
 
 ### Metadata options
 
@@ -110,7 +111,7 @@ All sources contribute to the include path list for every protodot invocation, e
 One diagram per `.proto` file showing only elements declared in that file.
 
 ```bash
-protodot -src <file.proto> -select '*' -inc <all-source-roots-semicolon-separated> -output <name>
+protodot -src <file.proto> -select '*' -inc '<source1-root>;<source2-root>' -output <name>
 dot -Tsvg <name>.dot -o <name>.svg
 ```
 
@@ -119,7 +120,7 @@ dot -Tsvg <name>.dot -o <name>.svg
 One diagram per `.proto` file showing the full graph including all imported types.
 
 ```bash
-protodot -src <file.proto> -inc <all-source-roots-semicolon-separated> -output <name>
+protodot -src <file.proto> -inc '<source1-root>;<source2-root>' -output <name>
 dot -Tsvg <name>.dot -o <name>.svg
 ```
 
@@ -144,7 +145,9 @@ protodot -src <tmpdir>/pkg-google.cloud.billing.v1.proto -inc <include-paths> -o
 dot -Tsvg <name>.dot -o <name>.svg
 ```
 
-**Edge case:** Proto files without a `package` declaration are excluded from package-level diagrams (they still get file-level and dependency-expanded diagrams if enabled).
+**Edge cases:**
+- Proto files without a `package` declaration are excluded from package-level diagrams (they still get file-level and dependency-expanded diagrams if enabled).
+- When a package spans multiple roots with different labels, the package-level entry uses the label of the root containing the most files for that package. Ties are broken alphabetically by label.
 
 ## Output Structure
 
@@ -234,7 +237,7 @@ Three-part structure: header, left catalog pane, right viewer pane.
 - Collapsible groups organized by root labels, with proto count
 - Each proto entry shows: file name, package (monospace), diagram type badges, source link
 - Selected proto highlighted with accent left border
-- Package-level diagrams in their own section at the bottom
+- Package-level diagrams in their own collapsible section at the bottom, ordered alphabetically by package name
 
 **Right pane — Viewer**:
 - Toolbar: current file name, diagram type switcher (active tab highlighted), zoom controls (+, −, FIT, 1:1)
