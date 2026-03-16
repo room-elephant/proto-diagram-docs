@@ -1,0 +1,29 @@
+{
+  "name": "proto-diagram-docs",
+  "version": "0.1.0",
+  "description": "Generate static documentation sites with SVG diagrams from Protocol Buffer definitions",
+  "main": "src/cli.js",
+  "bin": {
+    "proto-diagram-docs": "bin/proto-diagram-docs.js"
+  },
+  "scripts": {
+    "test": "jest --testPathIgnorePatterns=e2e",
+    "test:e2e": "playwright test",
+    "test:all": "jest"
+  },
+  "keywords": ["protobuf", "documentation", "graphviz", "diagrams", "protodot"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "js-yaml": "^4.1.0",
+    "glob": "^10.0.0",
+    "minimatch": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "@playwright/test": "^1.40.0"
+  }
+}
