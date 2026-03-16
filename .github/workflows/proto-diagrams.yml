@@ -1,0 +1,55 @@
+name: Proto Diagrams
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'proto-diagrams.yaml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Install protodot
+        run: |
+          curl -L https://protodot.seamia.net/binaries/linux -o /usr/local/bin/protodot
+          chmod +x /usr/local/bin/protodot
+          protodot -install
+
+      - name: Install proto-diagram-docs
+        run: npm install -g proto-diagram-docs
+
+      - name: Generate site
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROTO_REPOS_TOKEN }}
+        run: proto-diagram-docs generate
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

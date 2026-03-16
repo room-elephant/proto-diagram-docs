@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+      - name: Install protodot
+        run: |
+          curl -L https://protodot.seamia.net/binaries/linux -o /usr/local/bin/protodot
+          chmod +x /usr/local/bin/protodot
+          protodot -install
+      - run: npm ci
+      - run: npm test
+      - run: npx playwright install chromium
+      - run: npx playwright test
