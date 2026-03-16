@@ -99,11 +99,11 @@ metadata:
 
 ### Include path resolution
 
-protodot uses `-inc` to resolve `import` statements in proto files. The include paths are constructed as a semicolon-separated list of all source root directories:
-- For git sources: the clone directory root (e.g., `<tmpdir>/clone-googleapis`)
-- For local sources: the resolved absolute path
+protodot uses `-inc` to resolve `import` statements in proto files. The include paths are constructed as a semicolon-separated list of **source-level** directories (one per source, not per root):
+- For git sources: the top-level clone directory (e.g., `<tmpdir>/clone-googleapis`), not individual root subdirectories
+- For local sources: the resolved absolute path of the source's `path` field
 
-All source roots are included in every protodot invocation so cross-source imports can resolve.
+All sources contribute to the include path list for every protodot invocation, enabling cross-source imports to resolve correctly.
 
 ### File-level
 
@@ -189,6 +189,7 @@ Given the same config and proto files, output is byte-for-byte identical. No tim
 [
   {
     "id": "a1b2c3d4",
+    "type": "file",
     "name": "billing.proto",
     "package": "google.cloud.billing.v1",
     "label": "Billing",
@@ -198,6 +199,19 @@ Given the same config and proto files, output is byte-for-byte identical. No tim
     "enums": ["InvoiceState"],
     "diagramTypes": ["file", "deps"],
     "path": "google/cloud/billing/v1/billing.proto"
+  },
+  {
+    "id": "f9e8d7c6",
+    "type": "package",
+    "name": "google.cloud.billing.v1",
+    "package": "google.cloud.billing.v1",
+    "label": "Billing",
+    "source": "googleapis",
+    "messages": ["Invoice", "Account", "LineItem", "BillingSetup"],
+    "services": ["BillingService"],
+    "enums": ["InvoiceState"],
+    "diagramTypes": ["pkg"],
+    "fileCount": 3
   }
 ]
 ```
@@ -212,7 +226,7 @@ Three-part structure: header, left catalog pane, right viewer pane.
 
 **Header** (full width, 48px):
 - Left: hamburger toggle (collapses/expands catalog) + tool name "Proto Diagram Docs"
-- Right: version badge + GitHub link (https://github.com/room-elephant/proto-diagram-docs)
+- Right: version badge (from the CLI's `package.json` version, baked into `index.html` at build time) + GitHub link (https://github.com/room-elephant/proto-diagram-docs)
 - Hamburger collapses the catalog pane, giving the viewer full width
 
 **Left pane — Catalog** (320px fixed width):
@@ -254,13 +268,8 @@ Kafbat UI-inspired dark theme with cool blue-gray tones.
 - Warning/enums: `#FF9D00` (amber)
 - Error: `#E51A1A` (red)
 
-**Diagram node colors:**
-- Services: green `#33CC66` border
-- Messages: white `#D5DADD` border
-- Imported types: blue `#5B67E3` border
-- Enums: amber `#FF9D00` dashed border
-- Node fill: `#22282A` (card color)
-- Edges: `#454F54`
+**Diagram styling:**
+protodot generates `.dot` output with its own default styling (colors, fonts, shapes). The generated SVGs inherit protodot's styling as-is — we do not post-process or re-theme SVG content. The Kafbat-inspired theme applies to the **site shell** (header, catalog, viewer chrome, toolbar), not to the diagram content itself. The dark viewport background (`#0B0D0E`) provides good contrast for protodot's default light-on-white diagram output.
 
 **Font:** Inter for UI, SF Mono / monospace for package names and code.
 
@@ -330,7 +339,7 @@ Bundled in the repo (3-5 real `.proto` files covering messages, enums, services,
 
 GitHub Actions workflow for adopter repos.
 
-**Triggers:** daily schedule (6am UTC), manual dispatch, push to main when config changes.
+**Triggers:** daily schedule (6am UTC), manual dispatch, push to main when `proto-diagrams.yaml` changes (via `paths: ['proto-diagrams.yaml']` filter).
 
 **Steps:**
 1. Checkout
