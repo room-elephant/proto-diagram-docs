@@ -28,8 +28,8 @@ test('loads the site and shows catalog', async ({ page }) => {
 
 test('catalog shows groups', async ({ page }) => {
   await page.goto(siteUrl());
-  await expect(page.locator('text=Billing')).toBeVisible();
-  await expect(page.locator('text=Notifications')).toBeVisible();
+  await expect(page.locator('.group-header', { hasText: 'Billing' })).toBeVisible();
+  await expect(page.locator('.group-header', { hasText: 'Notifications' })).toBeVisible();
 });
 
 test('clicking a proto loads a diagram', async ({ page }) => {

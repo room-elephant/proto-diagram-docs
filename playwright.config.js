@@ -5,5 +5,8 @@ module.exports = defineConfig({
   timeout: 30000,
   use: {
     headless: true,
+    launchOptions: {
+      args: ['--allow-file-access-from-files'],
+    },
   },
 });
