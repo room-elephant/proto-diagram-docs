@@ -2,7 +2,7 @@
   "name": "proto-diagram-docs",
   "version": "0.1.0",
   "description": "Generate static documentation sites with SVG diagrams from Protocol Buffer definitions",
-  "author": "Room Elephant",
+  "author": "roomelephant",
   "license": "MIT",
   "repository": {
     "type": "git",
