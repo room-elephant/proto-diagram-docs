@@ -89,14 +89,28 @@ metadata:
 - `GITHUB_TOKEN` env var used for all git sources (single global token)
 - Labels on roots define catalog groups; defaults to directory name if omitted
 
+### Metadata options
+
+- `show_package` — when true, the proto's `package` declaration is displayed below the file name in each catalog entry (e.g., `google.cloud.billing.v1`). Default: `true`.
+- `show_source` — when true, the source repository name or local path is shown as secondary text on each catalog entry. Default: `true`.
+- `link_to_source` — when true, each catalog entry includes an external link icon (`↗ source`) pointing to the proto file in its source repository. For git sources, the link is constructed as `<repo>/blob/<ref>/<path-to-file>`. Not applicable to local sources. Default: `true`.
+
 ## Diagram Types
+
+### Include path resolution
+
+protodot uses `-inc` to resolve `import` statements in proto files. The include paths are constructed as a semicolon-separated list of all source root directories:
+- For git sources: the clone directory root (e.g., `<tmpdir>/clone-googleapis`)
+- For local sources: the resolved absolute path
+
+All source roots are included in every protodot invocation so cross-source imports can resolve.
 
 ### File-level
 
 One diagram per `.proto` file showing only elements declared in that file.
 
 ```bash
-protodot -src <file.proto> -select '*' -inc <include-paths> -output <name>
+protodot -src <file.proto> -select '*' -inc <all-source-roots-semicolon-separated> -output <name>
 dot -Tsvg <name>.dot -o <name>.svg
 ```
 
@@ -105,18 +119,32 @@ dot -Tsvg <name>.dot -o <name>.svg
 One diagram per `.proto` file showing the full graph including all imported types.
 
 ```bash
-protodot -src <file.proto> -inc <include-paths> -output <name>
+protodot -src <file.proto> -inc <all-source-roots-semicolon-separated> -output <name>
 dot -Tsvg <name>.dot -o <name>.svg
 ```
 
 ### Package-level
 
-One diagram per unique proto package, aggregating all files that share the same `package` declaration. Created by generating a synthetic `.proto` file that imports all files in the package, then running protodot on it.
+One diagram per unique proto package, aggregating all files that share the same `package` declaration.
+
+**Mechanics:** During metadata extraction (pipeline step 5), proto files are grouped by their `package` declaration. For each unique package, a synthetic `.proto` file is written to the temp directory that imports all files sharing that package:
+
+```proto
+// Auto-generated: package google.cloud.billing.v1
+syntax = "proto3";
+import "google/cloud/billing/v1/billing.proto";
+import "google/cloud/billing/v1/invoice.proto";
+import "google/cloud/billing/v1/account.proto";
+```
+
+Imports are ordered alphabetically by file path for determinism. The synthetic file is written to `<tmpdir>/pkg-<package-name>.proto`.
 
 ```bash
-protodot -src <synthetic-package.proto> -inc <include-paths> -output <name>
+protodot -src <tmpdir>/pkg-google.cloud.billing.v1.proto -inc <include-paths> -output <name>
 dot -Tsvg <name>.dot -o <name>.svg
 ```
+
+**Edge case:** Proto files without a `package` declaration are excluded from package-level diagrams (they still get file-level and dependency-expanded diagrams if enabled).
 
 ## Output Structure
 
@@ -133,9 +161,10 @@ dist/
 
 ### Stable IDs
 
-Deterministic hashes derived from source identity:
-- File diagrams: `hash(repo_url + root_path + relative_file_path)`
-- Package diagrams: `hash(package_name)`
+SHA-256 hashes (first 8 hex characters) derived from source identity:
+- File diagrams (git sources): `sha256(repo_url + ":" + root_path + ":" + relative_file_path)[:8]`
+- File diagrams (local sources): `sha256("local:" + absolute_config_relative_path + ":" + root_path + ":" + relative_file_path)[:8]`
+- Package diagrams: `sha256("pkg:" + package_name)[:8]`
 
 Same inputs produce the same IDs across rebuilds. Deep links remain valid unless source identifiers change.
 
@@ -187,7 +216,7 @@ Three-part structure: header, left catalog pane, right viewer pane.
 - Hamburger collapses the catalog pane, giving the viewer full width
 
 **Left pane — Catalog** (320px fixed width):
-- Search bar at top: filters across name, package, messages, services, enums, path
+- Search bar at top: filters across name, package, messages, services, enums, path. Shows "No results" message when filters match nothing.
 - Collapsible groups organized by root labels, with proto count
 - Each proto entry shows: file name, package (monospace), diagram type badges, source link
 - Selected proto highlighted with accent left border
@@ -306,10 +335,10 @@ GitHub Actions workflow for adopter repos.
 **Steps:**
 1. Checkout
 2. Install Node.js 20
-3. Install Graphviz via apt
-4. Install protodot from official binary
-5. Install `proto-diagram-docs` via npm
-6. Run `proto-diagram-docs generate` with `GITHUB_TOKEN` from repo secrets
+3. Install Graphviz via `sudo apt-get install -y graphviz`
+4. Install protodot: `curl -L https://protodot.seamia.net/binaries/linux -o /usr/local/bin/protodot && chmod +x /usr/local/bin/protodot && protodot -install`
+5. Install `proto-diagram-docs` via `npm install -g proto-diagram-docs`
+6. Run `proto-diagram-docs generate` with `GITHUB_TOKEN` env var mapped from the `PROTO_REPOS_TOKEN` repo secret
 7. Deploy to GitHub Pages via `actions/deploy-pages`
 
 The CLI's non-zero exit on any fatal error causes the workflow to fail before deploy.
@@ -321,6 +350,6 @@ Teams adopt by:
 2. Create `proto-diagrams.yaml` pointing at their proto sources
 3. Run `proto-diagram-docs generate`
 4. Copy the documented GitHub Actions workflow into their repo
-5. Set `PROTO_REPOS_TOKEN` secret if using private repos
+5. Set a repo secret (e.g., `PROTO_REPOS_TOKEN`) for private repos; the workflow maps it to `GITHUB_TOKEN` env var which the CLI reads
 
 No template repository. The CLI is the only dependency. Documentation covers system dependency installation, config authoring, and CI setup.
